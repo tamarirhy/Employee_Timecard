@@ -161,7 +161,7 @@ scheduler.add_job(
     send_if_payday,
     trigger="cron",
     day_of_week="thu",
-    hour=9
+    hour=12
 )
 
 #ROUTE
