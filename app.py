@@ -110,7 +110,7 @@ def send_reminder_email():
     sender = os.getenv("SENDER_EMAIL") #change to jana's email
 
 
-    link = "http://127.0.0.1:5000/" #later replace with live URL
+    link = "https://employee-timecard-cqde.onrender.com" 
 
     html = f"""
     <h2>Timecard Reminder</h2>
