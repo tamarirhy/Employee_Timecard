@@ -217,8 +217,8 @@ def home():
 
 @app.route("/test-reminder")
 def test_reminder():
-    scheduler.add_job(send_reminder_email)
-    return "Reminder scheduled!"
+    send_reminder_email()
+    return "Email sent (attempted)"
 
 @app.route("/debug-settings")
 def debug_settings():
