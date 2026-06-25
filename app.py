@@ -11,6 +11,12 @@ app = Flask(__name__)
 
 scheduler = BackgroundScheduler()
 
+#temp emails
+
+EMPLOYEES = ["sanaa414@icloud.com"] 
+EMPLOYER_EMAIL = os.environ.get("EMPLOYER_EMAIL")
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD") 
+SENDER_EMAIL = "mrsjanapollard@gmail.com"
 
 START_DATE = datetime(2026, 6, 1)
 PERIOD_LENGTH = 14
@@ -76,24 +82,16 @@ def send_email(subject, body):
     try:
         print("Sending email...")
 
-        password = os.environ.get("EMAIL_PASSWORD")
-        employer = os.environ.get("EMPLOYER_EMAIL")
-        sender = "mrsjanapollard@gmail.com"
-
-        if not password or not employer:
-            print("Missing EMAIL_PASSWORD or EMPLOYER_EMAIL in environment.")
-            return
-
         msg = MIMEText(body)
         msg["Subject"] = subject
-        msg["From"] = sender
-        msg["To"] = employer
+        msg["From"] = SENDER_EMAIL
+        msg["To"] = EMPLOYER_EMAIL
 
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender, password)
+            server.login(SENDER_EMAIL, EMAIL_PASSWORD)
             server.send_message(msg)
 
-        print("Email sent successfully!")
+        print("Email sent successfully")
 
     except Exception as e:
         print("EMAIL ERROR:", e)
@@ -103,53 +101,43 @@ def send_email(subject, body):
 def send_reminder_email():
     print("Sending reminder email...")
 
-    settings = load_settings()
-    
-    employees = settings.get("employees", [])
-    sender = "mrsjanapollard@gmail.com" #change to jana's email
-    password = os.environ.get("EMAIL_PASSWORD")
-
-    if not password:
-        print("No email password set yet. Reminder email NOT sent.")
+    if not EMAIL_PASSWORD:
+        print("Missing EMAIL_PASSWORD")
         return
 
-    link = "https://employee-timecard-cqde.onrender.com" #later replace with live URL
+    if not EMPLOYEES:
+        print("No employees listed")
+        return
+
+    link = "https://employee-timecard-cqde.onrender.com"
 
     html = f"""
     <h2>Timecard Reminder</h2>
+    <p>Please complete your timecard.</p>
 
-    <p>This is a reminder to complete your timecard for the current pay period.</p>
-
-    <p>
-        Please submit your timecard here:
-    </p>
-
-    <a href="{link}"
-       style="
-        display:inline-block;
-        padding:12px 18px;
-        background:#7a003c;
-        color:white;
-        text-decoration:none;
-        border-radius:8px;
-        font-weight:bold;
-       ">
+    <a href="{link}">
         Open Timecard
     </a>
     """
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Timecard Reminder"
-    msg["From"] = sender
-    msg["To"] = ", ".join(employees)
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = ", ".join(EMPLOYEES)  # IMPORTANT for Gmail compatibility
 
-    msg.attach(MIMEText(html, "html"))  
+    msg.attach(MIMEText(html, "html"))
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender, password)
-        server.send_message(msg)
+        server.login(SENDER_EMAIL, EMAIL_PASSWORD)
+        server.sendmail(
+            SENDER_EMAIL,
+            EMPLOYEES,
+            msg.as_string()
+        )
 
-    print("Reminder email sent successfully.")
+    print("Reminder email sent!")
+    print("EMAIL PASSWORD EXISTS:", bool(EMAIL_PASSWORD))
+    print("EMPLOYEES:", EMPLOYEES)
 
 # ONLY RUN EVERY OTHER THURSDAY
 
@@ -168,7 +156,7 @@ scheduler.add_job(
     send_if_payday,
     trigger="cron",
     day_of_week="thu",
-    hour=12
+    hour=14
 )
 
 #ROUTE
@@ -226,44 +214,11 @@ def home():
         week2=week2
     )
 
-# ADMIN
-
-@app.route("/admin", methods=["GET", "POST"])
-def admin():
-
-    settings = load_settings()
-
-    if request.method == "POST":
-
-        # add employee
-        new_email = request.form.get("email")
-        if new_email and new_email not in settings["employees"]:
-            settings["employees"].append(new_email)
-
-        # remove employee
-        remove_email = request.form.get("remove_email")
-        if remove_email and remove_email in settings["employees"]:
-            settings["employees"].remove(remove_email)
-
-        # update password
-        new_password = request.form.get("email_password")
-        if new_password:
-            settings["email_password"] = new_password
-
-        save_settings(settings)
-
-    return render_template(
-        "admin.html",
-        recipients=settings["employees"],
-    )
 
 @app.route("/test-reminder")
 def test_reminder():
-    try:
-        send_reminder_email()
-        return "Reminder sent!"
-    except Exception as e:
-        return f"Error: {e}"
+    send_reminder_email()
+    return "Email sent!"
 
 @app.route("/debug-settings")
 def debug_settings():
