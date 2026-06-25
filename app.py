@@ -255,6 +255,10 @@ def test_reminder():
     send_reminder_email()
     return "Reminder email sent!"
 
+@app.route("/debug-settings")
+def debug_settings():
+    return load_settings()
+
 #RUN APP
 
 if __name__ == '__main__':
