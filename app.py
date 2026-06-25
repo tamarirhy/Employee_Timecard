@@ -165,8 +165,8 @@ scheduler.add_job(
     send_if_payday,
     trigger="cron",
     day_of_week="thu",
-    hour=19,
-    minute=30
+    hour=20,
+    minute=15
 )
 
 #ROUTE
@@ -225,7 +225,8 @@ def home():
     )
 
 #RUN APP
+scheduler.start()
+print("Scheduler started")
 
 if __name__ == '__main__':
-    scheduler.start()
     app.run(debug=True, use_reloader=False) 
