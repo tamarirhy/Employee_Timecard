@@ -1,4 +1,4 @@
-from app import send_if_payday
+from email_service import send_reminder_email
 
 if __name__ == "__main__":
-    send_if_payday()
+    send_reminder_email()
