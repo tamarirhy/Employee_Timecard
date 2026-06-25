@@ -1,0 +1,30 @@
+name: Send Timecard Reminder
+
+on:
+  schedule:
+    - cron: "30 21 * * 4"  # Thursday 5:30 PM EST (9 PM UTC)
+  workflow_dispatch:
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run reminder job
+        run: python send_reminder_job.py
+        env:
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          EMPLOYEES: ${{ secrets.EMPLOYEES }}
+          BASE_URL: ${{ secrets.BASE_URL }}
