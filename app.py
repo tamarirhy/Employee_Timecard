@@ -2,22 +2,18 @@ from flask import Flask, render_template, request
 from datetime import datetime, timedelta
 import smtplib
 import json
-import threading
-import traceback
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
 
 scheduler = BackgroundScheduler()
 
-#temp emails
-
-EMPLOYEES = ["sanaa414@icloud.com"] 
-EMPLOYER_EMAIL = "mrsjanapollard@gmail.com" 
-EMAIL_PASSWORD = "evjk xbid xepl ljrw" 
-SENDER_EMAIL = "mrsjanapollard@gmail.com"
 
 START_DATE = datetime(2026, 6, 1)
 PERIOD_LENGTH = 14
@@ -29,12 +25,20 @@ SETTINGS_FILE = "settings.json"
 # SETTINGS(Employees/Employer)
 
 def load_settings():
-    with open(SETTINGS_FILE, "r") as f:
-        data = json.load(f)
+    try:
+        with open(SETTINGS_FILE, "r") as f:
+            data = json.load(f)
+    except Exception:
+        data = {}
+    
+    if "employees" not in data:
+        data["employees"] = []
 
-    data.setdefault("employees", [])
-    data.setdefault("employer", "")
-    data.setdefault("email_password", "")
+    if "email_password" not in data:
+        data["email_password"] = ""
+
+    if "employer" not in data:
+        data["employer"] = ""
 
     return data
 
@@ -80,75 +84,77 @@ def calculate_week(prefix, form):
 # EMAIL TO EMPLOYER (SUBMISSION)
 
 def send_email(subject, body):
-    try:
-        print("Sending email...")
+    settings = load_settings()
 
-        msg = MIMEText(body)
-        msg["Subject"] = subject
-        msg["From"] = SENDER_EMAIL
-        msg["To"] = EMPLOYER_EMAIL
+    password = os.getenv("EMAIL_PASSWORD")
 
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-            server.starttls()
-            server.login(SENDER_EMAIL, EMAIL_PASSWORD)
-            server.send_message(msg)
+    employer = os.getenv("EMPLOYER_EMAIL")
+    sender = os.getenv("SENDER_EMAIL")#change to jana's email
+    
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = sender
+    msg["To"] = employer
 
-        print("Email sent successfully")
-
-    except Exception as e:
-        print("EMAIL ERROR:", e)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender, password)
+        server.send_message(msg)
 
 #REMINDER EMAIL (SENT TO EMPLOYEES)
 
 def send_reminder_email():
     print("Sending reminder email...")
 
-    if not EMAIL_PASSWORD:
-        print("Missing EMAIL_PASSWORD")
-        return
+    settings = load_settings()
+    password = os.getenv("EMAIL_PASSWORD")
 
-    if not EMPLOYEES:
-        print("No employees listed")
-        return
+    employees = settings.get("employees", [])
+    sender = os.getenv("SENDER_EMAIL") #change to jana's email
 
-    link = "https://employee-timecard-cqde.onrender.com"
+
+    link = "http://127.0.0.1:5000/" #later replace with live URL
 
     html = f"""
     <h2>Timecard Reminder</h2>
-    <p>Please complete your timecard.</p>
 
-    <a href="{link}">
+    <p>This is a reminder to complete your timecard for the current pay period.</p>
+
+    <p>
+        Please submit your timecard here:
+    </p>
+
+    <a href="{link}"
+       style="
+        display:inline-block;
+        padding:12px 18px;
+        background:#7a003c;
+        color:white;
+        text-decoration:none;
+        border-radius:8px;
+        font-weight:bold;
+       ">
         Open Timecard
     </a>
     """
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Timecard Reminder"
-    msg["From"] = SENDER_EMAIL
-    msg["To"] = ", ".join(EMPLOYEES)  # IMPORTANT for Gmail compatibility
+    msg["From"] = sender
+    msg["To"] = ", ".join(employees)
 
-    msg.attach(MIMEText(html, "html"))
+    msg.attach(MIMEText(html, "html"))  
 
-    with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-        server.starttls()
-        server.login(SENDER_EMAIL, EMAIL_PASSWORD)
-        server.sendmail(
-            SENDER_EMAIL,
-            EMPLOYEES,
-            msg.as_string()
-        )
-
-    print("Reminder email sent!")
-    print("EMAIL PASSWORD EXISTS:", bool(EMAIL_PASSWORD))
-    print("EMPLOYEES:", EMPLOYEES)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender, password)
+        server.send_message(msg)
 
 # ONLY RUN EVERY OTHER THURSDAY
 
 def send_if_payday():
 
-    today = datetime.now().date()
+    today = datetime.now()
 
-    delta_days = (today - REMINDER_START.date()).days
+    delta_days = (today - REMINDER_START).days
 
     if delta_days % 14 == 0:
         send_reminder_email()
@@ -156,28 +162,32 @@ def send_if_payday():
 #SCHEDULER
 
 scheduler.add_job(
-    send_if_payday,
-    trigger="cron",
-    day_of_week="thu",
-    hour=14
+    #send_if_payday,
+    #trigger="cron",
+    #day_of_week="thu",
+    #hour=9
+    send_reminder_email,
+    trigger="interval",
+    minutes=2
+
 )
 
 #ROUTE
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    try:
-        period_start, period_end = get_current_pay_period()
-        week1, week2 = get_week_dates(period_start)
 
-        if request.method == "POST":
-            name = request.form.get("employee_name")
+    period_start, period_end = get_current_pay_period()
+    week1, week2 = get_week_dates(period_start)
 
-            week1_total = calculate_week("week1", request.form)
-            week2_total = calculate_week("week2", request.form)
-            total = week1_total + week2_total
+    if request.method == "POST":
+        name = request.form.get("employee_name")
 
-            email_body = f"""
+        week1_total = calculate_week("week1", request.form)
+        week2_total = calculate_week("week2", request.form)
+        total = week1_total + week2_total
+
+        email_body = f"""
     Employee: {name}
     EmployeeEmail: {request.form.get("employee_email")}
 
@@ -203,37 +213,22 @@ def home():
     Total Hours: {total}
     """
 
-        
-            threading.Thread(target=send_email,args=("New Timecard Submission", email_body)).start()
+        send_email("New Timecard Submission", email_body)
 
-            return render_template(
+        return render_template(
             "index.html",
             week1=week1,
             week2=week2,
             success=True
         )
-        return render_template(
+    return render_template(
         "index.html",
         week1=week1,
-        week2=week2)
-    
-    except Exception as e:
-        print("FLASK ERROR:")
-        traceback.print_exc()
-        return "Server Error", 500
-
-
-@app.route("/test-reminder")
-def test_reminder():
-    print("TEST TRIGGER: sending reminder email now")
-
-    threading.Thread(target=send_reminder_email).start()
-
-    return "Email triggered (background)"
+        week2=week2
+    )
 
 #RUN APP
 
 if __name__ == '__main__':
     scheduler.start()
-    app.run(debug=True) 
-
+    app.run(debug=True, use_reloader=False) 
