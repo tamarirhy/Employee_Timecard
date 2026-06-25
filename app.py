@@ -246,6 +246,11 @@ def admin():
         recipients=settings["employees"],
     )
 
+@app.route("/test-reminder")
+def test_reminder():
+    send_reminder_email()
+    return "Reminder email sent!"
+
 #RUN APP
 
 if __name__ == '__main__':
