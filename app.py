@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 from datetime import datetime, timedelta
 import smtplib
 import json
+import threading
 import traceback
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -88,6 +89,7 @@ def send_email(subject, body):
         msg["To"] = EMPLOYER_EMAIL
 
         with smtplib.SMTP_SSL("smtp.gmail.com", 587, timeout=10) as server:
+            server.starttls()
             server.login(SENDER_EMAIL, EMAIL_PASSWORD)
             server.send_message(msg)
 
@@ -128,6 +130,7 @@ def send_reminder_email():
     msg.attach(MIMEText(html, "html"))
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 587, timeout=10) as server:
+        server.starttls()
         server.login(SENDER_EMAIL, EMAIL_PASSWORD)
         server.sendmail(
             SENDER_EMAIL,
@@ -201,7 +204,7 @@ def home():
     """
 
         
-            send_email("New Timecard Submission", email_body)
+            threading.Thread(target=send_email,args=("New Timecard Submission", email_body)).start()
 
             return render_template(
             "index.html",
@@ -223,8 +226,10 @@ def home():
 @app.route("/test-reminder")
 def test_reminder():
     print("TEST TRIGGER: sending reminder email now")
-    send_reminder_email()
-    return "Email sent!"
+
+    threading.Thread(target=send_reminder_email).start()
+
+    return "Email triggered (background)"
 
 #RUN APP
 
