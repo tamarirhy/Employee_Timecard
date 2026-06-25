@@ -5,10 +5,8 @@ import json
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
-from dotenv import load_dotenv
 import os
 
-load_dotenv()
 
 app = Flask(__name__)
 
