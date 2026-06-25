@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 from datetime import datetime, timedelta
 import smtplib
 import json
-import os
+import traceback
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -14,8 +14,8 @@ scheduler = BackgroundScheduler()
 #temp emails
 
 EMPLOYEES = ["sanaa414@icloud.com"] 
-EMPLOYER_EMAIL = os.environ.get("EMPLOYER_EMAIL")
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD") 
+EMPLOYER_EMAIL = "mrsjanapollard@gmail.com" 
+EMAIL_PASSWORD = "evjk xbid xepl ljrw" 
 SENDER_EMAIL = "mrsjanapollard@gmail.com"
 
 START_DATE = datetime(2026, 6, 1)
@@ -163,18 +163,18 @@ scheduler.add_job(
 
 @app.route("/", methods=["GET", "POST"])
 def home():
+    try:
+        period_start, period_end = get_current_pay_period()
+        week1, week2 = get_week_dates(period_start)
 
-    period_start, period_end = get_current_pay_period()
-    week1, week2 = get_week_dates(period_start)
+        if request.method == "POST":
+            name = request.form.get("employee_name")
 
-    if request.method == "POST":
-        name = request.form.get("employee_name")
+            week1_total = calculate_week("week1", request.form)
+            week2_total = calculate_week("week2", request.form)
+            total = week1_total + week2_total
 
-        week1_total = calculate_week("week1", request.form)
-        week2_total = calculate_week("week2", request.form)
-        total = week1_total + week2_total
-
-        email_body = f"""
+            email_body = f"""
     Employee: {name}
     EmployeeEmail: {request.form.get("employee_email")}
 
@@ -200,19 +200,24 @@ def home():
     Total Hours: {total}
     """
 
-        send_email("New Timecard Submission", email_body)
+        
+            send_email("New Timecard Submission", email_body)
 
-        return render_template(
+            return render_template(
             "index.html",
             week1=week1,
             week2=week2,
             success=True
         )
-    return render_template(
+        return render_template(
         "index.html",
         week1=week1,
-        week2=week2
-    )
+        week2=week2)
+    
+    except Exception as e:
+        print("FLASK ERROR:")
+        traceback.print_exc()
+        return "Server Error", 500
 
 
 @app.route("/test-reminder")
@@ -225,5 +230,5 @@ def test_reminder():
 
 if __name__ == '__main__':
     scheduler.start()
-    app.run(debug=True, use_reloader=False) 
+    app.run(debug=True) 
 
