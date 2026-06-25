@@ -4,13 +4,10 @@ import smtplib
 import json
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from apscheduler.schedulers.background import BackgroundScheduler
 import os
 
 
 app = Flask(__name__)
-
-scheduler = BackgroundScheduler()
 
 
 START_DATE = datetime(2026, 6, 1)
@@ -148,26 +145,6 @@ def send_reminder_email():
         server.login(sender, password)
         server.send_message(msg)
 
-# ONLY RUN EVERY OTHER THURSDAY
-
-def send_if_payday():
-
-    today = datetime.now().date()
-
-    delta_days = (today - REMINDER_START.date()).days
-
-    if delta_days % 14 == 0:
-        send_reminder_email()
-
-#SCHEDULER
-
-scheduler.add_job(
-    send_if_payday,
-    trigger="cron",
-    day_of_week="thu",
-    hour=20,
-    minute=15
-)
 
 #ROUTE
 
@@ -223,10 +200,6 @@ def home():
         week1=week1,
         week2=week2
     )
-
-#RUN APP
-scheduler.start()
-print("Scheduler started")
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False) 
