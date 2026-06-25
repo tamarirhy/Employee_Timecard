@@ -73,24 +73,30 @@ def calculate_week(prefix, form):
 # EMAIL TO EMPLOYER (SUBMISSION)
 
 def send_email(subject, body):
-    settings = load_settings()
-    password = os.environ.get("EMAIL_PASSWORD")
+    try:
+        print("Sending email...")
 
-    if not password:
-        print("No email password set yet.")
-        return
+        password = os.environ.get("EMAIL_PASSWORD")
+        employer = os.environ.get("EMPLOYER_EMAIL")
+        sender = "mrsjanapollard@gmail.com"
 
-    employer = os.environ.get("EMPLOYER_EMAIL")
-    sender = "mrsjanapollard@gmail.com" #change to jana's email
-    
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = sender
-    msg["To"] = employer
+        if not password or not employer:
+            print("Missing EMAIL_PASSWORD or EMPLOYER_EMAIL in environment.")
+            return
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender, password)
-        server.send_message(msg)
+        msg = MIMEText(body)
+        msg["Subject"] = subject
+        msg["From"] = sender
+        msg["To"] = employer
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender, password)
+            server.send_message(msg)
+
+        print("Email sent successfully!")
+
+    except Exception as e:
+        print("EMAIL ERROR:", e)
 
 #REMINDER EMAIL (SENT TO EMPLOYEES)
 
@@ -253,8 +259,11 @@ def admin():
 
 @app.route("/test-reminder")
 def test_reminder():
-    send_reminder_email()
-    return "Reminder email sent!"
+    try:
+        send_reminder_email()
+        return "Reminder sent!"
+    except Exception as e:
+        return f"Error: {e}"
 
 @app.route("/debug-settings")
 def debug_settings():
