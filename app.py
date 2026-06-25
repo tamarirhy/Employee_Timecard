@@ -217,12 +217,9 @@ def home():
 
 @app.route("/test-reminder")
 def test_reminder():
+    print("TEST TRIGGER: sending reminder email now")
     send_reminder_email()
-    return "Email sent (attempted)"
-
-@app.route("/debug-settings")
-def debug_settings():
-    return load_settings()
+    return "Email sent!"
 
 #RUN APP
 
