@@ -110,7 +110,7 @@ def send_reminder_email():
     sender = os.getenv("SENDER_EMAIL") #change to jana's email
 
 
-    link = "https://employee-timecard-cqde.onrender.com" 
+    link = os.getenv("BASE_URL")
 
     html = f"""
     <h2>Timecard Reminder</h2>
@@ -150,9 +150,9 @@ def send_reminder_email():
 
 def send_if_payday():
 
-    today = datetime.now()
+    today = datetime.now().date()
 
-    delta_days = (today - REMINDER_START).days
+    delta_days = (today - REMINDER_START.date()).days
 
     if delta_days % 14 == 0:
         send_reminder_email()
@@ -160,14 +160,11 @@ def send_if_payday():
 #SCHEDULER
 
 scheduler.add_job(
-    #send_if_payday,
-    #trigger="cron",
-    #day_of_week="thu",
-    #hour=9
-    send_reminder_email,
-    trigger="interval",
-    minutes=2
-
+    send_if_payday,
+    trigger="cron",
+    day_of_week="thu",
+    hour=19,
+    minute=30
 )
 
 #ROUTE
