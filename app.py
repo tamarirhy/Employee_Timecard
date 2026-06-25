@@ -148,7 +148,7 @@ def send_reminder_email():
 
 def send_if_payday():
 
-    today = datetime.now()
+    today = datetime.now().date()
 
     delta_days = (today - REMINDER_START.date()).days
 
