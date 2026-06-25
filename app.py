@@ -82,7 +82,6 @@ def calculate_week(prefix, form):
 # EMAIL TO EMPLOYER (SUBMISSION)
 
 def send_email(subject, body):
-    settings = load_settings()
 
     password = os.getenv("EMAIL_PASSWORD")
 
@@ -103,10 +102,13 @@ def send_email(subject, body):
 def send_reminder_email():
     print("Sending reminder email...")
 
-    settings = load_settings()
     password = os.getenv("EMAIL_PASSWORD")
 
-    employees = settings.get("employees", [])
+    employees = os.getenv("EMPLOYEES", "").split(",")
+    employees = [e.strip() for e in employees if e.strip()]
+    if not employees:
+        print("No employee emails configured.")
+        return
     sender = os.getenv("SENDER_EMAIL") #change to jana's email
 
 
