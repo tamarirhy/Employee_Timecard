@@ -230,7 +230,7 @@ def admin():
 
         # add employee
         new_email = request.form.get("email")
-        if new_email:
+        if new_email and new_email not in settings["employees"]:
             settings["employees"].append(new_email)
 
         # update password
