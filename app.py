@@ -233,13 +233,17 @@ def admin():
         if new_email and new_email not in settings["employees"]:
             settings["employees"].append(new_email)
 
+        # remove employee
+        remove_email = request.form.get("remove_email")
+        if remove_email and remove_email in settings["employees"]:
+            settings["employees"].remove(remove_email)
+
         # update password
         new_password = request.form.get("email_password")
         if new_password:
             settings["email_password"] = new_password
 
         save_settings(settings)
-
 
     return render_template(
         "admin.html",

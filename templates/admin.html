@@ -27,7 +27,13 @@
 <h3>Current Employees:</h3>
 <ul>
     {% for r in recipients %}
-        <li>{{ r }}</li>
+    <li>
+        {{ r }}
+        <form method="POST" style="display:inline;">
+            <input type="hidden" name="remove_email" value="{{ r }}">
+            <button type="submit">Remove</button>
+        </form>
+    </li>
     {% endfor %}
 </ul>
 
