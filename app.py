@@ -106,7 +106,7 @@ def send_reminder_email():
         print("No email password set yet. Reminder email NOT sent.")
         return
 
-    link = "http://127.0.0.1:5000/" #later replace with live URL
+    link = "https://employee-timecard-cqde.onrender.com" #later replace with live URL
 
     html = f"""
     <h2>Timecard Reminder</h2>
