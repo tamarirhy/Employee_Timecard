@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 from datetime import datetime, timedelta
 import smtplib
 import json
+import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -73,13 +74,13 @@ def calculate_week(prefix, form):
 
 def send_email(subject, body):
     settings = load_settings()
-    password = settings.get("email_password")
+    password = os.environ.get("EMAIL_PASSWORD")
 
     if not password:
         print("No email password set yet.")
         return
 
-    employer = settings.get("employer")
+    employer = os.environ.get("EMPLOYER_EMAIL")
     sender = "mrsjanapollard@gmail.com" #change to jana's email
     
     msg = MIMEText(body)
@@ -100,7 +101,7 @@ def send_reminder_email():
     
     employees = settings.get("employees", [])
     sender = "mrsjanapollard@gmail.com" #change to jana's email
-    password = settings.get("email_password")
+    password = os.environ.get("EMAIL_PASSWORD")
 
     if not password:
         print("No email password set yet. Reminder email NOT sent.")
