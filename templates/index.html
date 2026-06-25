@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Timecard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+<div class="header-card">
+        <img
+            src="{{ url_for('static', filename='logo.png') }}"
+            alt="Company Logo"
+            class="logo"
+        >
+    </div>
+
+<div class="container">
+
+    <div class="card">
+        <h1>Employee Timecard</h1>
+        <p>Please log your hours for each day below</p>
+    </div>
+
+    <form method="POST">
+
+        <div class="card">
+            <h2 class="card-title">Employee Information</h2>
+
+        <label>Your Full Name *</label>
+        <input 
+            type="text" 
+            name="employee_name"
+            placeholder="e.g. Jane Smith" 
+            required
+        >
+
+        <label>Your Email Address *</label>
+        <input 
+            type="text" 
+            name="employee_email"
+            placeholder="e.g.name@mail.com"
+            required
+        >
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">
+                Week 1 ({{ week1[0].strftime('%b %d') }} – {{ week1[4].strftime('%b %d') }})
+            </h2>
+
+            <label>Monday ({{ week1[0].strftime('%b %d') }})</label>
+            <input id="week1_mon" type="number" name="week1_mon" min="0" max="24" step="0.25">
+            <label>Tuesday ({{ week1[1].strftime('%b %d') }})</label>
+            <input id="week1_tue" type="number" name="week1_tue" min="0" max="24" step="0.25">
+            <label>Wednesday ({{ week1[2].strftime('%b %d') }})</label>
+            <input id="week1_wed" type="number" name="week1_wed" min="0" max="24" step="0.25">
+            <label>Thursday ({{ week1[3].strftime('%b %d') }})</label>
+            <input id="week1_thu" type="number" name="week1_thu" min="0" max="24" step="0.25">
+            <label>Friday ({{ week1[4].strftime('%b %d') }})</label>
+            <input id="week1_fri" type="number" name="week1_fri" min="0" max="24" step="0.25">
+
+            <div class="total-box">
+                <label>Total Hours - Week 1:</label>
+                <span id="week1-total">0</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Week 2 ({{ week2[0].strftime('%b %d') }} – {{ week2[4].strftime('%b %d') }}) </h2>
+
+            <label>Monday ({{ week2[0].strftime('%b %d') }})</label>
+            <input id="week2_mon" type="number" name="week2_mon" min="0" max="24" step="0.25">
+            <label>Tuesday ({{ week2[1].strftime('%b %d') }})</label>
+            <input id="week2_tue" type="number" name="week2_tue" min="0" max="24" step="0.25">
+            <label>Wednesday ({{ week2[2].strftime('%b %d') }})</label>
+            <input id="week2_wed" type="number" name="week2_wed" min="0" max="24" step="0.25">
+            <label>Thursday ({{ week2[3].strftime('%b %d') }})</label>
+            <input id="week2_thu" type="number" name="week2_thu" min="0" max="24" step="0.25">
+            <label>Friday ({{ week2[4].strftime('%b %d') }})</label>
+            <input id="week2_fri" type="number" name="week2_fri" min="0" max="24" step="0.25">
+        
+            <div class="total-box">
+                <label>Total Hours - Week 2:</label>
+                <span id="week2-total">0</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Pay Period Summary</h2>
+
+            <div class="grand-total-box">
+                <label>Total Hours:</label>
+                <span id="grand-total">0</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Accuracy Acknowledgement</h2>
+            <label>By submitting this timecard, I confirm that all hours reported are true, accurate, and complete to the best of my knowledge. I understand that falsifying time records is a serious violation of company policy and may result in disciplinary action.</label>
+            <input type="checkbox" id="certification" name="certification" required>
+            <label for="certification">I confirm that the hours entered above are accurate and I authorize submission of this timecard.</label>
+        </div>
+
+        <button type="submit"> Submit</button>
+    </form>
+
+</div>
+<script>
+
+function updateTotals() {
+
+    let week1 =
+        Number(document.getElementById("week1_mon").value || 0) +
+        Number(document.getElementById("week1_tue").value || 0) +
+        Number(document.getElementById("week1_wed").value || 0) +
+        Number(document.getElementById("week1_thu").value || 0) +
+        Number(document.getElementById("week1_fri").value || 0);
+
+    let week2 =
+        Number(document.getElementById("week2_mon").value || 0) +
+        Number(document.getElementById("week2_tue").value || 0) +
+        Number(document.getElementById("week2_wed").value || 0) +
+        Number(document.getElementById("week2_thu").value || 0) +
+        Number(document.getElementById("week2_fri").value || 0);
+
+    let grandTotal = week1 + week2;
+
+    document.getElementById("week1-total").textContent = week1;
+    document.getElementById("week2-total").textContent = week2;
+    document.getElementById("grand-total").textContent = grandTotal;
+}
+
+document.querySelectorAll('#week1_mon, #week1_tue, #week1_wed, #week1_thu, #week1_fri, #week2_mon, #week2_tue, #week2_wed, #week2_thu, #week2_fri')
+    .forEach(input => {
+        input.addEventListener("input", updateTotals);
+    });
+
+updateTotals();  // Initialize totals on page load
+
+</script>
+</body>
+</html>

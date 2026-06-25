@@ -1,0 +1,92 @@
+body{
+    background:#f5f7fa;
+    font-family:"Segoe UI", Tahoma, Geneva, Verdana,sans-serif;
+    margin:0;
+    padding:30px 0;
+}
+
+.container{
+    width:600px;
+    margin: auto;
+    background:transparent;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:18px;
+    margin-bottom:25px;
+
+    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    border:1px solid #e5e7eb;
+}
+
+.card-title{
+    background:#fdf2f8;
+    padding:12px 16px;
+    border-radius:10px;
+    color:#7a003c;
+    margin:-10px -10px 20px -10px;
+}
+
+h1{
+    text-align:center;
+}
+
+p{
+    text-align:center;
+    color:gray;
+}
+
+label{
+    display:block;
+    margin-top:30px;
+    margin-bottom:10px;
+    font-weight:bold;
+}
+
+input[type="text"], input[type="number"]{
+    width:100%;
+    padding:10px;
+    font-size:15px;
+    border-radius:10px;
+    border:1px solid #d1d5db;
+    box-sizing:border-box;
+    transition:0.2s;
+}
+
+input:focus{
+
+    outline:none;
+
+    border-color:#7a003c;
+
+    box-shadow:
+        0 0 0 3px rgba(122,0,60,.15);
+}
+
+.total-box {
+    background: #fdf2f8;
+    border-left:5px solid #a10052;
+    padding: 12px 16px;
+    margin-top:20px;
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+.grand-total-box {
+    background: #7a003c;
+    color: white;
+    padding: 16px;
+    margin-top: 20px;
+    border-radius: 14px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.logo{
+    display:block;
+    margin:0 auto 20px auto;
+    max-width:180px;
+    height:auto;
+}
