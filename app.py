@@ -90,7 +90,7 @@ def send_email(subject, body):
     msg["From"] = sender
     msg["To"] = employer
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
         server.login(sender, password)
         server.send_message(msg)
 
@@ -141,7 +141,7 @@ def send_reminder_email():
 
     msg.attach(MIMEText(html, "html"))  
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
         server.login(sender, password)
         server.send_message(msg)
 
