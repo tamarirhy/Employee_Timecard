@@ -4,11 +4,21 @@ import smtplib
 import json
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
 import os
+from supabase import create_client, Client
 
+load_dotenv()
 
 app = Flask(__name__)
 
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+supabase: Client = create_client(
+    SUPABASE_URL,
+    SUPABASE_KEY
+)
 
 START_DATE = datetime(2026, 6, 1)
 PERIOD_LENGTH = 14
@@ -78,21 +88,21 @@ def calculate_week(prefix, form):
 
 # EMAIL TO EMPLOYER (SUBMISSION)
 
-def send_email(subject, body):
+def save_timecard(data):
+    try:
+        response = (
+            supabase.table("timecards")
+            .insert(data)
+            .execute()
+        )
 
-    password = os.getenv("EMAIL_PASSWORD")
+        print("Timecard saved successfully!")
 
-    employer = os.getenv("EMPLOYER_EMAIL")
-    sender = os.getenv("SENDER_EMAIL")#change to jana's email
-    
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = sender
-    msg["To"] = employer
+        return True
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
-        server.login(sender, password)
-        server.send_message(msg)
+    except Exception as e:
+        print(f"Supabase Error: {e}")
+        return False
 
 #REMINDER EMAIL (SENT TO EMPLOYEES)
 
@@ -161,40 +171,41 @@ def home():
         week2_total = calculate_week("week2", request.form)
         total = week1_total + week2_total
 
-        email_body = f"""
-    Employee: {name}
-    EmployeeEmail: {request.form.get("employee_email")}
+        timecard = {
+            "employee_name": name,
+            "employee_email": request.form.get("employee_email"),
+            "pay_period_start": period_start.strftime("%Y-%m-%d"),
+            "pay_period_end": period_end.strftime("%Y-%m-%d"),
 
-    Pay Period: {period_start.strftime("%Y-%m-%d")} to {period_end.strftime("%Y-%m-%d")}
+            "week1_mon": request.form.get("week1_mon"),
+            "week1_tue": request.form.get("week1_tue"),
+            "week1_wed": request.form.get("week1_wed"),
+            "week1_thu": request.form.get("week1_thu"),
+            "week1_fri": request.form.get("week1_fri"),
 
-    WEEK 1
-    Monday: {request.form.get('week1_mon')}
-    Tuesday: {request.form.get('week1_tue')}
-    Wednesday: {request.form.get('week1_wed')}
-    Thursday: {request.form.get('week1_thu')}
-    Friday: {request.form.get('week1_fri')}
-    Total: {week1_total}
+            "week2_mon": request.form.get("week2_mon"),
+            "week2_tue": request.form.get("week2_tue"),
+            "week2_wed": request.form.get("week2_wed"),
+            "week2_thu": request.form.get("week2_thu"),
+            "week2_fri": request.form.get("week2_fri"),
 
-    WEEK 2  
-    Monday: {request.form.get('week2_mon')}
-    Tuesday: {request.form.get('week2_tue')}
-    Wednesday: {request.form.get('week2_wed')}
-    Thursday: {request.form.get('week2_thu')}
-    Friday: {request.form.get('week2_fri')}
-    Total: {week2_total}
+            "week1_total": week1_total,
+            "week2_total": week2_total,
+            "total_hours": total
+}
 
-    
-    Total Hours: {total}
-    """
 
-        send_email("New Timecard Submission", email_body)
+        saved = save_timecard(timecard)
+
+        if not saved:
+            return "Failed to save timecard.", 500
 
         return render_template(
-            "index.html",
-            week1=week1,
-            week2=week2,
-            success=True
-        )
+        "index.html",
+        week1=week1,
+        week2=week2,
+        success=True
+)
     return render_template(
         "index.html",
         week1=week1,
